@@ -1,7 +1,5 @@
 package br.com.serratec.entity;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,8 +18,6 @@ public class Categoria {
 	private String nome;
 	
 	private String descricao;
-	private LocalDate criadoEm;
-	private LocalDateTime atualizadoEm;
 	
 	
 	public Long getId() {
@@ -41,18 +37,6 @@ public class Categoria {
 	}
 	public void setDescricao(String descricao) {
 		this.descricao = descricao;
-	}
-	public LocalDate getCriadoEm() {
-		return criadoEm;
-	}
-	public void setCriadoEm(LocalDate criadoEm) {
-		this.criadoEm = criadoEm;
-	}
-	public LocalDateTime getAtualizadoEm() {
-		return atualizadoEm;
-	}
-	public void setAtualizadoEm(LocalDateTime atualizadoEm) {
-		this.atualizadoEm = atualizadoEm;
 	}
 	
 	

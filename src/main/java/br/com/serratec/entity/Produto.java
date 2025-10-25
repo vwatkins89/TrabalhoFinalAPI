@@ -1,7 +1,5 @@
 package br.com.serratec.entity;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -30,7 +28,6 @@ public class Produto extends Categoria {
 	@Min(value = 1, message = "Preço do produto deve ser maior que zero!")
 	private Double preco;
 	
-	private Integer estoque;
 	
 	@JsonBackReference
 	@ManyToOne
@@ -39,8 +36,6 @@ public class Produto extends Categoria {
 	private Categoria categoria;
 	
 	private Boolean ativo;
-	private LocalDate criadoEm;
-	private LocalDateTime atualizadoEm;
 	
 	
 	public Long getId() {
@@ -67,12 +62,6 @@ public class Produto extends Categoria {
 	public void setPreco(Double preco) {
 		this.preco = preco;
 	}
-	public Integer getEstoque() {
-		return estoque;
-	}
-	public void setEstoque(Integer estoque) {
-		this.estoque = estoque;
-	}
 	public Categoria getCategoria() {
 		return categoria;
 	}
@@ -84,18 +73,6 @@ public class Produto extends Categoria {
 	}
 	public void setAtivo(Boolean ativo) {
 		this.ativo = ativo;
-	}
-	public LocalDate getCriadoEm() {
-		return criadoEm;
-	}
-	public void setCriadoEm(LocalDate criadoEm) {
-		this.criadoEm = criadoEm;
-	}
-	public LocalDateTime getAtualizadoEm() {
-		return atualizadoEm;
-	}
-	public void setAtualizadoEm(LocalDateTime atualizadoEm) {
-		this.atualizadoEm = atualizadoEm;
 	}
 	
 	

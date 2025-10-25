@@ -15,6 +15,6 @@ public enum StatusPedido {
 				return status;
 			}
 		}
-		throw new EnumExcepeciton("Status Inválido!");
+		throw new EnumException("Status Inválido!");
 	}
 }
