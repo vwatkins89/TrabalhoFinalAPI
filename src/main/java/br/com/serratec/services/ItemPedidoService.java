@@ -12,26 +12,22 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Optional;
 
-@ExtendWith(MockitoExtension.class)
+
 public class ItemPedidoService{
 
-    @Mock
     private PedidoRepository pedidoRepository;
 
-    @Mock
     private ClienteRepository clienteRepository;
 
-    @Mock
+
     private ProdutoService produtoService;
 
-    @InjectMocks
     private PedidoService ordemService;
 
     private Cliente cliente;
     private Produto produto1;
     private Produto produto2;
 
-    @BeforeEach
     void setup() {
         cliente = new Cliente();
         cliente.setId(1L);
@@ -73,7 +69,6 @@ public class ItemPedidoService{
         assertEquals("CRIADO", pedidoSalvo.getStatus());
     }
 
-    @Test
     void criar_DeveLancarExcecaoQuandoClienteNaoEncontrado() {
         when(clienteRepository.findById(99L)).thenReturn(Optional.empty());
 

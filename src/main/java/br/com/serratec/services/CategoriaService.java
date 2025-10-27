@@ -1,37 +1,46 @@
 package br.com.serratec.services;
 
-import br.com.serratec.entity.Categoria;
-import br.com.serratec.repository.CategoriaRepository;
-import br.com.serratec.exception.NotFoundException;
-import br.com.serratec.exception.UsuarioException;
+import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import br.com.serratec.dto.CategoriaRequestDTO;
+import br.com.serratec.dto.CategoriaResponseDTO;
+import br.com.serratec.entity.Categoria;
+import br.com.serratec.exception.NotFoundException;
+import br.com.serratec.exception.UsuarioException;
+import br.com.serratec.mapper.CategoriaMapper;
+import br.com.serratec.repository.CategoriaRepository;
 
 @Service
 public class CategoriaService {
     
-    private final CategoriaRepository repositorio;
-
-    public CategoriaService(CategoriaRepository repositorio) {
-        this.repositorio = repositorio;
-    }
-
-    public Categoria criar(Categoria categoria) {
-        if (categoria.getNome() == null || categoria.getNome().trim().isEmpty()) {
+	@Autowired
+	CategoriaRepository categoriaRepository;
+	@Autowired
+	CategoriaMapper categoriaMapper;
+	
+    public CategoriaResponseDTO criar(CategoriaRequestDTO categoriaRequestDTO) {
+        if (categoriaRequestDTO.getNome() == null || categoriaRequestDTO.getNome().trim().isEmpty()) {
             throw new UsuarioException("O nome da categoria é obrigatório.");
         }
         
-        return repositorio.save(categoria);
+        Categoria categoriaEntity = categoriaMapper.toEntity(categoriaRequestDTO);
+        
+        categoriaRepository.save(categoriaEntity);
+        
+        CategoriaResponseDTO response = categoriaMapper.toResponseDto(categoriaEntity);
+        
+        return response;
     }
     
     public List<Categoria> buscarTodos() {
-        return repositorio.findAll();
+        return categoriaRepository.findAll();
     }
     
     public Categoria buscarPorId(Long id) {
-        return repositorio.findById(id)
+        return categoriaRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Categoria"));
     }
     
@@ -44,11 +53,11 @@ public class CategoriaService {
 
         categoriaExistente.setNome(categoriaDetalhes.getNome());
         
-        return repositorio.save(categoriaExistente);
+        return categoriaRepository.save(categoriaExistente);
     }
 
     public void deletar(Long id) {
         Categoria categoria = buscarPorId(id); 
-        repositorio.delete(categoria);
+        categoriaRepository.delete(categoria);
     }
 }

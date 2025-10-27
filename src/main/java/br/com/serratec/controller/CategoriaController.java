@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.serratec.dto.request.CategoriaRequestDTO;
-import br.com.serratec.dto.response.CategoriaResponseDTO;
+import br.com.serratec.dto.CategoriaRequestDTO;
+import br.com.serratec.dto.CategoriaResponseDTO;
 import br.com.serratec.entity.Categoria;
-import br.com.serratec.service.CategoriaService;
+import br.com.serratec.services.CategoriaService;
 import jakarta.validation.Valid;
 
 @RestController

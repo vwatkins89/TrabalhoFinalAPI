@@ -2,15 +2,20 @@ package br.com.serratec.services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.com.serratec.dto.ItemPedidoRequestDTO;
+import br.com.serratec.dto.PedidoRequestDTO;
+import br.com.serratec.dto.PedidoResponseDTO;
 import br.com.serratec.entity.Cliente;
 import br.com.serratec.entity.ItemPedido;
 import br.com.serratec.entity.Pedido;
 import br.com.serratec.entity.Produto;
 import br.com.serratec.enums.StatusPedido;
+import br.com.serratec.exception.NotFoundException;
 import br.com.serratec.repository.ClienteRepository;
 import br.com.serratec.repository.ItemPedidoRepository;
 import br.com.serratec.repository.PedidoRepository;
