@@ -44,8 +44,8 @@ public class ItemPedido {
 		return pedido;
 	}
 
-	public void setPedido(Pedido pedido) {
-		this.pedido = pedido;
+	public void setPedido(Pedido double1) {
+		this.pedido = double1;
 	}
 
 	public Produto getProduto() {
@@ -78,6 +78,11 @@ public class ItemPedido {
 
 	public void setSubtotal(BigDecimal subtotal) {
 		this.subtotal = subtotal;
+	}
+
+	public Long getProdutoId() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	

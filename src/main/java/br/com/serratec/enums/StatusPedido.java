@@ -2,7 +2,7 @@ package br.com.serratec.enums;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
-import br.com.serratec.exception.EnumExcepeciton;
+import br.com.serratec.exception.EnumException;
 
 public enum StatusPedido {
 	
