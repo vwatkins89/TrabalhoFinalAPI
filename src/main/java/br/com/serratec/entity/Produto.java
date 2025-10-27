@@ -1,6 +1,5 @@
 package br.com.serratec.entity;
 
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Entity;
@@ -62,6 +61,7 @@ public class Produto extends Categoria {
 	public void setPreco(Double preco) {
 		this.preco = preco;
 	}
+	
 	public Categoria getCategoria() {
 		return categoria;
 	}
@@ -74,7 +74,6 @@ public class Produto extends Categoria {
 	public void setAtivo(Boolean ativo) {
 		this.ativo = ativo;
 	}
-	
-	
+
 
 }
