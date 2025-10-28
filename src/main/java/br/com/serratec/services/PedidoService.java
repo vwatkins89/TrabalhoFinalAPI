@@ -8,11 +8,9 @@ import org.springframework.stereotype.Service;
 
 import br.com.serratec.dto.PedidoRequestDTO;
 import br.com.serratec.dto.PedidoResponseDTO;
-import br.com.serratec.entity.Cliente;
 import br.com.serratec.entity.Pedido;
 import br.com.serratec.enums.StatusPedido;
 import br.com.serratec.exception.NotFoundException;
-import br.com.serratec.exception.UsuarioException;
 import br.com.serratec.mapper.PedidoMapper;
 import br.com.serratec.repository.ClienteRepository;
 import br.com.serratec.repository.PedidoRepository;
@@ -33,56 +31,53 @@ public class PedidoService {
 	//Criar um Pedido
 	@Transactional
 	public PedidoResponseDTO criar(PedidoRequestDTO pedidoRequestDto) {
-		if(pedidoRequestDto.getClienteId() == null) {
-			throw new UsuarioException("O id do cliente é obrigatório");
-		}
-		Cliente cliente = clienteRepository.findById(pedidoRequestDto.getClienteId())
+		
+		//estou utilizando var. Var se adapta a cada string que ele é utilizado, buscando a qual string ele se referencia.
+		
+		var cliente = clienteRepository.findById(pedidoRequestDto.getClienteId())
                 .orElseThrow(() -> new NotFoundException("Cliente não encontrado."));
-        Pedido pedidoEntity = pedidoMapper.toEntity(pedidoRequestDto);
+        var pedidoEntity = pedidoMapper.toEntity(pedidoRequestDto);
         pedidoEntity.setCliente(cliente);
         pedidoEntity.setDataCriacao(LocalDateTime.now());
         pedidoEntity.setStatus(StatusPedido.ENTREGUE);
         pedidoEntity.setNumeroPedido("PEDIDO-" + System.currentTimeMillis());
 
         pedidoRepository.save(pedidoEntity);
-
-        PedidoResponseDTO response = pedidoMapper.toResponseDto(pedidoEntity);
-
-        return response;
-		
+        
+        var response = pedidoMapper.toResponseDto(pedidoEntity);
+        return response;	
 	}
+	
+	//listar todos
 	 public List<PedidoResponseDTO> listar() {
-	        List<Pedido> pedidos = pedidoRepository.findAll();
-
+	       
+		 	List<Pedido> pedidos = pedidoRepository.findAll();
 	        List<PedidoResponseDTO> response = pedidos.stream()
 	                .map(pedidoMapper::toResponseDto)
 	                .toList();
-
 	        return response;
 	}
 
-	    public PedidoResponseDTO buscarPorId(Long id) {
-	        Pedido pedidoEntity = pedidoRepository.findById(id)
+	//listar por id 
+	 public PedidoResponseDTO buscarPorId(Long id) {
+	    	
+	        var pedidoEntity = pedidoRepository.findById(id)
 	                .orElseThrow(() -> new NotFoundException("Pedido não encontrado."));
-
-	        PedidoResponseDTO response = pedidoMapper.toResponseDto(pedidoEntity);
-
+	        var response = pedidoMapper.toResponseDto(pedidoEntity);
 	        return response;
 	    }
 
-	    @Transactional
-	    public PedidoResponseDTO atualizar(Long id, PedidoRequestDTO pedidoRequestDTO) {
-	        Pedido pedidoExistente = pedidoRepository.findById(id)
+	 
+	 //Atualizar pedido
+	 @Transactional
+	 public PedidoResponseDTO atualizar(Long id, PedidoRequestDTO pedidoRequestDTO) {
+	        var pedidoExistente = pedidoRepository.findById(id)
 	                .orElseThrow(() -> new NotFoundException("Pedido não encontrado."));
 
-	        if (pedidoRequestDTO.getClienteId() == null) {
-	            throw new UsuarioException("O id do cliente é obrigatório.");
-	        }
-
-	        Cliente cliente = clienteRepository.findById(pedidoRequestDTO.getClienteId())
+	        var cliente = clienteRepository.findById(pedidoRequestDTO.getClienteId())
 	                .orElseThrow(() -> new NotFoundException("Cliente não encontrado."));
 
-	        Pedido pedidoAtualizado = pedidoMapper.toEntity(pedidoRequestDTO);
+	        var pedidoAtualizado = pedidoMapper.toEntity(pedidoRequestDTO);
 
 	        
 	        pedidoAtualizado.setId(pedidoExistente.getId()); // preserva registros existente que não vêm do dto
@@ -93,18 +88,20 @@ public class PedidoService {
 
 	        pedidoRepository.save(pedidoAtualizado);
 
-	        PedidoResponseDTO response = pedidoMapper.toResponseDto(pedidoAtualizado);
-
+	        var response = pedidoMapper.toResponseDto(pedidoAtualizado);
 	        return response;
 	    }
 	  
-	    @Transactional
-	    public void deletar(Long id) {
-	        Pedido pedidoEntity = pedidoRepository.findById(id)
-	                .orElseThrow(() -> new NotFoundException("Pedido não encontrado."));
-	        pedidoRepository.delete(pedidoEntity);
-	    }
-	}
+	 
+	 //Deletar pedido
+	 @Transactional
+	 public String deletar(Long id) {
+	     var pedidoEntity = pedidoRepository.findById(id) //find traz o objeto junto, o existisById apenas diz se ele existe ou nao(true or false
+	             .orElseThrow(() -> new NotFoundException("Pedido não encontrado."));
+	     pedidoRepository.delete(pedidoEntity);	
+	     return String.format("Pedido id: % deletado com sucesso", id);
+	     }
+}
 
 	
 	
