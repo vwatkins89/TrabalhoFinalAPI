@@ -1,78 +1,119 @@
 package br.com.serratec.services;
 
-import br.com.serratec.entity.Cliente;
-import br.com.serratec.repository.ClienteRepository;
-import br.com.serratec.integration.ViaCepCliente;
-import br.com.serratec.integration.ViaCepResposta;
-import br.com.serratec.exception.NotFoundException;
-import br.com.serratec.exception.UsuarioException;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import br.com.serratec.dto.ClienteRequestDTO;
+import br.com.serratec.dto.ClienteResponseDTO;
+import br.com.serratec.dto.EnderecoResponseDTO;
+import br.com.serratec.entity.Cliente;
+import br.com.serratec.exception.RecursoNaoEncontradoException;
+import br.com.serratec.mapper.ClienteMapper;
+import br.com.serratec.repository.ClienteRepository;
 
 @Service
 public class ClienteService {
 
-	private final ClienteRepository clienteRepository;
-	private final ViaCepCliente viaCepCliente;
+   
+    private final String erroClienteNaoEncontrado = "Cliente com ID não foi encontrado.";
 
-	public ClienteService(ClienteRepository clienteRepository, ViaCepCliente viaCepCliente) {
-        this.clienteRepository = clienteRepository;
-        this.viaCepCliente = viaCepCliente;
+    @Autowired
+    private ClienteRepository clienteRepository;
+    
+    @Autowired
+    private ClienteMapper clienteMapper; 
+    
+    @Autowired
+    private EmailService emailService; 
+    
+    @Autowired
+    private EnderecoService enderecoService; 
+    
+    
+    @Transactional 
+    public ClienteResponseDTO criarCliente(ClienteRequestDTO clienteRequestDTO) { 
+        
+        // Busca endereço 
+        EnderecoResponseDTO endereco = enderecoService.buscarCep(clienteRequestDTO.getCep());
+        
+        
+        Cliente cliente = clienteMapper.toEntity(clienteRequestDTO); 
+        
+        // Preenche endereço
+        cliente.setLogradouro(endereco.logradouro());
+        cliente.setBairro(endereco.bairro());
+        cliente.setCidade(endereco.localidade());
+        cliente.setEstado(endereco.uf());
+        
+        Cliente novoCliente = clienteRepository.save(cliente);
+
+        
+        emailService.enviarEmailCadastro(novoCliente);
+        
+        return clienteMapper.toResponseDto(novoCliente); 
     }
 
-	private void validarCampos(Cliente cliente) {
-		if (cliente.getNome() == null || cliente.getNome().trim().isEmpty()) {
-			throw new UsuarioException("O nome do cliente é obrigatório.");
-		}
-		if (cliente.getCpf() == null || cliente.getCpf().length() != 11) {
-			throw new UsuarioException("CPF inválido. Deve conter 11 dígitos.");
-		}
-		if (cliente.getEmail() == null || !cliente.getEmail().contains("@")) {
-			throw new UsuarioException("E-mail inválido.");
-		}
-	}
+   
+    @Transactional
+    public ClienteResponseDTO atualizarCliente(Long id, ClienteRequestDTO clienteRequestDTO) { 
+        
+      
+        Cliente clienteExistente = clienteRepository.findById(id)
+            .orElseThrow(() -> new RecursoNaoEncontradoException(String.format(erroClienteNaoEncontrado, id)));
+        
+        // Mapeamento mantem o ID
+        Cliente clienteAtualizado = clienteMapper.toEntity(clienteRequestDTO);
+        clienteAtualizado.setId(id);
 
-	private void preencherEnderecoViaCep(Cliente cliente) {
-		if (cliente.getCep() != null && !cliente.getCep().isEmpty()) {
-			ViaCepResposta endereco = viaCepCliente.obterEnderecoPorCep(cliente.getCep());
+        //Consulta se o CEP mudou
+        if (!clienteExistente.getCep().equals(clienteRequestDTO.getCep())) {
+            
+            EnderecoResponseDTO novoEndereco = enderecoService.buscarCep(clienteRequestDTO.getCep());
+            
+             clienteAtualizado.setLogradouro(novoEndereco.logradouro());
+             clienteAtualizado.setBairro(novoEndereco.bairro());
+             clienteAtualizado.setCidade(novoEndereco.localidade());
+             clienteAtualizado.setEstado(novoEndereco.uf());
+        } else {
+             
+             clienteAtualizado.setLogradouro(clienteExistente.getLogradouro());
+             clienteAtualizado.setBairro(clienteExistente.getBairro());
+             clienteAtualizado.setCidade(clienteExistente.getCidade());
+             clienteAtualizado.setEstado(clienteExistente.getEstado());
+        }
+        
+        
+        Cliente clienteSalvo = clienteRepository.save(clienteAtualizado);
+        emailService.enviarEmailCadastro(clienteSalvo); 
+        
+        return clienteMapper.toResponseDto(clienteSalvo);
+    }
+    
+    
+    public ClienteResponseDTO buscarClientePorId(Long id) { 
+        Cliente cliente = clienteRepository.findById(id)
+            .orElseThrow(() -> new RecursoNaoEncontradoException(String.format(erroClienteNaoEncontrado, id)));
+        
+        return clienteMapper.toResponseDto(cliente); 
+    }
 
-			cliente.setLogradouro(endereco.getLogradouro());
-			cliente.setCidade(endereco.getLocalidade());
-			cliente.setEstado(endereco.getUf());
-		}
-	}
+   
+    public Page<ClienteResponseDTO> listarClientes(Pageable pageable) { 
+        Page<Cliente> clientesPage = clienteRepository.findAll(pageable);
+        
+        return clientesPage.map(clienteMapper::toResponseDto);
+    }
 
-	@Transactional
-	public Cliente criar(Cliente cliente) {
-		validarCampos(cliente);
-		preencherEnderecoViaCep(cliente);
-
-		Cliente clienteSalvo = clienteRepository.save(cliente);
-		return clienteSalvo;
-	}
-
-	@Transactional
-	public Cliente atualizar(Long id, Cliente detalhesCliente) {
-		Cliente clienteExistente = clienteRepository.findById(id)
-				.orElseThrow(() -> new NotFoundException("Cliente"));
-
-		validarCampos(detalhesCliente);
-
-		clienteExistente.setNome(detalhesCliente.getNome());
-		clienteExistente.setEmail(detalhesCliente.getEmail());
-
-		if (detalhesCliente.getCep() != null && !detalhesCliente.getCep().equals(clienteExistente.getCep())) {
-			clienteExistente.setCep(detalhesCliente.getCep());
-			preencherEnderecoViaCep(clienteExistente);
-		}
-
-		return clienteRepository.save(clienteExistente);
-	}
-
-	public Optional<Cliente> buscarPorId(Long id) {
-		return clienteRepository.findById(id);
-	}
+    
+    @Transactional
+    public void excluirCliente(Long id) { 
+    	//exists vai ao banco e retorna true ou false
+        if (!clienteRepository.existsById(id)) {
+            throw new RecursoNaoEncontradoException(String.format(erroClienteNaoEncontrado, id));
+        }
+        clienteRepository.deleteById(id);
+    }
 }

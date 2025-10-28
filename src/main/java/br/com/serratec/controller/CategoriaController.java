@@ -3,10 +3,6 @@ package br.com.serratec.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,50 +15,44 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.serratec.dto.CategoriaRequestDTO;
 import br.com.serratec.dto.CategoriaResponseDTO;
-import br.com.serratec.entity.Categoria;
 import br.com.serratec.services.CategoriaService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/categorias")
+@RequestMapping
 public class CategoriaController {
 
     @Autowired
     private CategoriaService service;
 
+    @PostMapping
+    public ResponseEntity<CategoriaResponseDTO> criar(@Valid @RequestBody CategoriaRequestDTO categoriaRequest) {
+        var criado = service. criar(categoriaRequest); //var ja entende o tipo do metodo que ele esta sendo usado
+        return ResponseEntity.status(201).body(criado);
+    }
+    
     @GetMapping
-    public List<Categoria> listar() {
-        return service.listarTodas();
+    public ResponseEntity<List<CategoriaResponseDTO>> buscarTodos() {
+    	var categorias = service.buscarTodos(); 
+    	return ResponseEntity.status(201).body(categorias);       
     }
+    
 
-    @GetMapping("/paginacao")
-    public Page<Categoria> listarPagina(
-            @PageableDefault(page = 0, size = 10, sort = "nome", direction = Direction.ASC) Pageable pageable) {
-        return service.listarPorPagina(pageable);
-    }
-
-    @GetMapping("/{id}")
+    @GetMapping
     public ResponseEntity<CategoriaResponseDTO> buscarPorId(@PathVariable Long id) {
-        CategoriaResponseDTO dto = service.buscarPorId(id);
+        var dto = service.buscarPorId(id);
         return ResponseEntity.ok(dto);
     }
 
-    @PostMapping
-    public ResponseEntity<CategoriaResponseDTO> criar(@Valid @RequestBody CategoriaRequestDTO categoriaRequest) {
-        CategoriaResponseDTO criado = service.criarCategoria(categoriaRequest);
-        return ResponseEntity.status(201).body(criado);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<CategoriaResponseDTO> atualizar(@PathVariable Long id,
-            @Valid @RequestBody CategoriaRequestDTO categoriaRequest) {
-        CategoriaResponseDTO atualizado = service.atualizarCategoria(id, categoriaRequest);
+    @PutMapping
+    public ResponseEntity<CategoriaResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO categoriaRequest) {
+        var atualizado = service.atualizar(id, categoriaRequest);
         return ResponseEntity.ok(atualizado);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
-        service.excluirCategoria(id);
+    @DeleteMapping
+    public ResponseEntity<CategoriaResponseDTO> deletar(@PathVariable Long id) {
+        service.deletar(id);
         return ResponseEntity.noContent().build();
     }
 }

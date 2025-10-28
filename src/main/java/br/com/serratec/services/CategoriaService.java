@@ -1,6 +1,8 @@
 package br.com.serratec.services;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,30 +37,43 @@ public class CategoriaService {
         return response;
     }
     
-    public List<Categoria> buscarTodos() {
-        return categoriaRepository.findAll();
+    public List<CategoriaResponseDTO> buscarTodos() {
+        List<Categoria> categorias = categoriaRepository.findAll();
+        return categorias.stream()
+                .map(categoriaMapper::toResponseDto)
+                .collect(Collectors.toList());
     }
     
-    public Categoria buscarPorId(Long id) {
-        return categoriaRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Categoria"));
-    }
-    
-    public Categoria atualizar(Long id, Categoria categoriaDetalhes) {
-        Categoria categoriaExistente = buscarPorId(id); 
+    public CategoriaResponseDTO buscarPorId(Long id) {
+        Optional<Categoria> categoriaOptional = categoriaRepository.findById(id);
 
-        if (categoriaDetalhes.getNome() == null || categoriaDetalhes.getNome().trim().isEmpty()) {
-            throw new UsuarioException("O nome da categoria não pode ser vazio.");
+        Categoria categoria = categoriaOptional.orElseThrow(() -> new NotFoundException("Categoria não encontrada com o ID: " + id));
+        
+        return categoriaMapper.toResponseDto(categoria);
+    }
+
+    public CategoriaResponseDTO atualizar(Long id, CategoriaRequestDTO categoriaRequestDTO) {
+        if (categoriaRequestDTO.getNome() == null || categoriaRequestDTO.getNome().trim().isEmpty()) {
+            throw new UsuarioException("O nome da categoria é obrigatório.");
         }
 
-        categoriaExistente.setNome(categoriaDetalhes.getNome());
-        
-        return categoriaRepository.save(categoriaExistente);
+        Categoria categoriaExistente = categoriaRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Categoria não encontrada para atualização com o ID: " + id));
+
+        categoriaExistente.setNome(categoriaRequestDTO.getNome());
+
+        categoriaRepository.save(categoriaExistente);
+
+        return categoriaMapper.toResponseDto(categoriaExistente);
     }
 
     public void deletar(Long id) {
-        Categoria categoria = buscarPorId(id); 
-        categoriaRepository.delete(categoria);
+
+        if (categoriaRepository.existsById(id)) {
+            throw new NotFoundException("Categoria não encontrada para deleção com o ID: " + id);
+        }
+        
+        categoriaRepository.deleteById(id);
     }
 
 }
