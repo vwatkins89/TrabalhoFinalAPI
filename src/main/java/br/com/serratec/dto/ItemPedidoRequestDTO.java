@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 public class ItemPedidoRequestDTO {
 
     @NotNull
+    private Long pedidoId;
+
+    @NotNull
     private Long produtoId;
 
     @NotNull
@@ -16,6 +19,14 @@ public class ItemPedidoRequestDTO {
     private BigDecimal precoUnitario;
 
     public ItemPedidoRequestDTO() {}
+
+    public Long getPedidoId() {
+        return pedidoId;
+    }
+
+    public void setPedidoId(Long pedidoId) {
+        this.pedidoId = pedidoId;
+    }
 
     public Long getProdutoId() {
         return produtoId;
