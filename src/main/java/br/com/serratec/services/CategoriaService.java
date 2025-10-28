@@ -60,4 +60,5 @@ public class CategoriaService {
         Categoria categoria = buscarPorId(id); 
         categoriaRepository.delete(categoria);
     }
+
 }
