@@ -1,76 +1,110 @@
 package br.com.serratec.services;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import br.com.serratec.dto.ItemPedidoRequestDTO;
 import br.com.serratec.dto.PedidoRequestDTO;
 import br.com.serratec.dto.PedidoResponseDTO;
-import br.com.serratec.entity.Cliente;
-import br.com.serratec.entity.ItemPedido;
 import br.com.serratec.entity.Pedido;
-import br.com.serratec.entity.Produto;
 import br.com.serratec.enums.StatusPedido;
 import br.com.serratec.exception.NotFoundException;
+import br.com.serratec.mapper.PedidoMapper;
 import br.com.serratec.repository.ClienteRepository;
-import br.com.serratec.repository.ItemPedidoRepository;
 import br.com.serratec.repository.PedidoRepository;
-import br.com.serratec.repository.ProdutoRepository;
 import jakarta.transaction.Transactional;
 
 @Service
 public class PedidoService {
-
+	
 	@Autowired
 	private PedidoRepository pedidoRepository;
 	
 	@Autowired
-	private ItemPedidoRepository itemPedidoRepository;
-	
-	@Autowired
-	private ProdutoRepository produtoRepository;
-	
-	@Autowired
 	private ClienteRepository clienteRepository;
 	
-	public List<PedidoResponseDTO> listar() {
-        List<PedidoResponseDTO> pedidosDTO = new ArrayList<>();
-        for (Pedido pedido : pedidoRepository.findAll()) {
-            pedidosDTO.add(new PedidoResponseDTO(pedido.getId(), pedido.getNumeroPedido(), pedido.getStatus().name()));
-        }
-        return pedidosDTO;
-    }
+	@Autowired
+	private PedidoMapper pedidoMapper;
+	
+	//Criar um Pedido
+	@Transactional
+	public PedidoResponseDTO criar(PedidoRequestDTO pedidoRequestDto) {
+		
+		//estou utilizando var. Var se adapta a cada string que ele é utilizado, buscando a qual string ele se referencia.
+		
+		var cliente = clienteRepository.findById(pedidoRequestDto.getClienteId())
+                .orElseThrow(() -> new NotFoundException("Cliente não encontrado."));
+        var pedidoEntity = pedidoMapper.toEntity(pedidoRequestDto);
+        pedidoEntity.setCliente(cliente);
+        pedidoEntity.setDataCriacao(LocalDateTime.now());
+        pedidoEntity.setStatus(StatusPedido.ENTREGUE);
+        pedidoEntity.setNumeroPedido("PEDIDO-" + System.currentTimeMillis());
 
-    @Transactional
-    public PedidoResponseDTO inserir(PedidoRequestDTO dto) {
-        Cliente cliente = clienteRepository.findById(dto.getClienteId())
-                .orElseThrow(() -> new NotFoundException("Cliente não encontrado"));
+        pedidoRepository.save(pedidoEntity);
+        
+        var response = pedidoMapper.toResponseDto(pedidoEntity);
+        return response;	
+	}
+	
+	//listar todos
+	 public List<PedidoResponseDTO> listar() {
+	       
+		 	List<Pedido> pedidos = pedidoRepository.findAll();
+	        List<PedidoResponseDTO> response = pedidos.stream()
+	                .map(pedidoMapper::toResponseDto)
+	                .toList();
+	        return response;
+	}
 
-        Pedido pedido = new Pedido();
-        pedido.setNumeroPedido(dto.getNumeroPedido());
-        pedido.setDataCriacao(LocalDateTime.now());
-        pedido.setStatus(StatusPedido.RECEBIDO);
-        pedido.setCliente(cliente);
-        pedido = pedidoRepository.save(pedido);
+	//listar por id 
+	 public PedidoResponseDTO buscarPorId(Long id) {
+	    	
+	        var pedidoEntity = pedidoRepository.findById(id)
+	                .orElseThrow(() -> new NotFoundException("Pedido não encontrado."));
+	        var response = pedidoMapper.toResponseDto(pedidoEntity);
+	        return response;
+	    }
 
-        for (ItemPedidoRequestDTO itemDTO : dto.getItens()) {
-            Produto produto = produtoRepository.findById(itemDTO.getProdutoId())
-                    .orElseThrow(() -> new NotFoundException("Produto não encontrado"));
+	 
+	 //Atualizar pedido
+	 @Transactional
+	 public PedidoResponseDTO atualizar(Long id, PedidoRequestDTO pedidoRequestDTO) {
+	        var pedidoExistente = pedidoRepository.findById(id)
+	                .orElseThrow(() -> new NotFoundException("Pedido não encontrado."));
 
-            ItemPedido item = new ItemPedido();
-            item.setPedido(pedido);
-            item.setProduto(produto);
-            item.setQuantidade(itemDTO.getQuantidade());
-            item.setPrecoUnitario(itemDTO.getPrecoUnitario());
+	        var cliente = clienteRepository.findById(pedidoRequestDTO.getClienteId())
+	                .orElseThrow(() -> new NotFoundException("Cliente não encontrado."));
 
-            itemPedidoRepository.save(item);
-        }
+	        var pedidoAtualizado = pedidoMapper.toEntity(pedidoRequestDTO);
 
-        return new PedidoResponseDTO(pedido.getId(), pedido.getNumeroPedido(), pedido.getStatus().name());
-    }
+	        
+	        pedidoAtualizado.setId(pedidoExistente.getId()); // preserva registros existente que não vêm do dto
+	        pedidoAtualizado.setCliente(cliente);
+	        pedidoAtualizado.setDataCriacao(pedidoExistente.getDataCriacao());
+	        pedidoAtualizado.setNumeroPedido(pedidoExistente.getNumeroPedido());
+	        pedidoAtualizado.setStatus(pedidoExistente.getStatus());
+
+	        pedidoRepository.save(pedidoAtualizado);
+
+	        var response = pedidoMapper.toResponseDto(pedidoAtualizado);
+	        return response;
+	    }
+	  
+	 
+	 //Deletar pedido
+	 @Transactional
+	 public String deletar(Long id) {
+	     var pedidoEntity = pedidoRepository.findById(id) //find traz o objeto junto, o existisById apenas diz se ele existe ou nao(true or false
+	             .orElseThrow(() -> new NotFoundException("Pedido não encontrado."));
+	     pedidoRepository.delete(pedidoEntity);	
+	     return String.format("Pedido id: % deletado com sucesso", id);
+	     }
 }
+
+	
+	
+	
+
 

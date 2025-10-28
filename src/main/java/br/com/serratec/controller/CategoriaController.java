@@ -27,24 +27,26 @@ public class CategoriaController {
 
     @PostMapping
     public ResponseEntity<CategoriaResponseDTO> criar(@Valid @RequestBody CategoriaRequestDTO categoriaRequest) {
-        CategoriaResponseDTO criado = service. criar(categoriaRequest);
+        var criado = service. criar(categoriaRequest); //var ja entende o tipo do metodo que ele esta sendo usado
         return ResponseEntity.status(201).body(criado);
     }
     
     @GetMapping
-    public List<CategoriaResponseDTO> buscarTodos() {
-        return service.buscarTodos();
+    public ResponseEntity<List<CategoriaResponseDTO>> buscarTodos() {
+    	var categorias = service.buscarTodos(); 
+    	return ResponseEntity.status(201).body(categorias);       
     }
+    
 
     @GetMapping
     public ResponseEntity<CategoriaResponseDTO> buscarPorId(@PathVariable Long id) {
-        CategoriaResponseDTO dto = service.buscarPorId(id);
+        var dto = service.buscarPorId(id);
         return ResponseEntity.ok(dto);
     }
 
     @PutMapping
     public ResponseEntity<CategoriaResponseDTO> atualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO categoriaRequest) {
-        CategoriaResponseDTO atualizado = service.atualizar(id, categoriaRequest);
+        var atualizado = service.atualizar(id, categoriaRequest);
         return ResponseEntity.ok(atualizado);
     }
 

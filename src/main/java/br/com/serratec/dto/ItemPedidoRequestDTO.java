@@ -1,10 +1,14 @@
 package br.com.serratec.dto;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public class ItemPedidoRequestDTO {
+
+    @NotNull
+    private Long pedidoId;
 
     @NotNull
     private Long produtoId;
@@ -16,6 +20,14 @@ public class ItemPedidoRequestDTO {
     private BigDecimal precoUnitario;
 
     public ItemPedidoRequestDTO() {}
+
+    public Long getPedidoId() {
+        return pedidoId;
+    }
+
+    public void setPedidoId(Long pedidoId) {
+        this.pedidoId = pedidoId;
+    }
 
     public Long getProdutoId() {
         return produtoId;

@@ -1,66 +1,71 @@
 package br.com.serratec.services;
 
-import br.com.serratec.entity.Categoria;
-import br.com.serratec.entity.Produto;
-import br.com.serratec.repository.CategoriaRepository;
-import br.com.serratec.repository.ProdutoRepository;
-import br.com.serratec.exception.NotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import br.com.serratec.dto.ProdutoRequestDTO;
+import br.com.serratec.dto.ProdutoResponseDTO;
+import br.com.serratec.entity.Produto;
+import br.com.serratec.exception.NotFoundException;
+import br.com.serratec.exception.UsuarioException;
+import br.com.serratec.mapper.ProdutoMapper;
+import br.com.serratec.repository.ProdutoRepository;
 
 @Service
 public class ProdutoService {
 
-    private final ProdutoRepository produtoRepository;
-    private final CategoriaRepository categoriaRepository;
+	@Autowired
+	ProdutoRepository produtoRepository;
 
-    public ProdutoService(ProdutoRepository produtoRepository, CategoriaRepository categoriaRepository) {
-        this.produtoRepository = produtoRepository;
-        this.categoriaRepository = categoriaRepository;
-    }
+	@Autowired
+	ProdutoMapper produtoMapper;
 
-    @Transactional
-    public Produto criar(Produto produto, Long categoriaId) {
-        Categoria categoria = categoriaRepository.findById(categoriaId)
-            .orElseThrow(() -> new NotFoundException("Categoria"));
+	public ProdutoResponseDTO criar(ProdutoRequestDTO produtoRequestDTO) {
+		if (produtoRequestDTO.getNome() == null || produtoRequestDTO.getNome().trim().isEmpty()) {
+			throw new UsuarioException("O nome do produto é obrigatório.");
+		}
 
-        produto.setCategoria(categoria);
-        return produtoRepository.save(produto);
-    }
-    
-    @Transactional
-    public Produto atualizar(Long id, Produto produtoDetalhes, Long categoriaId) {
-        Produto produtoExistente = produtoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Produto"));
-        
-        Categoria novaCategoria = categoriaRepository.findById(categoriaId)
-            .orElseThrow(() -> new NotFoundException("Categoria"));
+		Produto produtoEntity = produtoMapper.toEntity(produtoRequestDTO);
+		produtoRepository.save(produtoEntity);
 
-        produtoExistente.setNome(produtoDetalhes.getNome());
-        produtoExistente.setPreco(produtoDetalhes.getPreco());
-        produtoExistente.setCategoria(novaCategoria);
-        
-        return produtoRepository.save(produtoExistente);
-    }
-    
-    public Produto buscarPrecoEEstoqueDoProduto(Long produtoId) {
-        return produtoRepository.findById(produtoId)
-                .orElseThrow(() -> new NotFoundException("Produto"));
-    }
-    
-    public List<Produto> buscarTodos() {
-        return produtoRepository.findAll();
-    }
-    
-    public Produto buscarPorId(Long id) {
-        return produtoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Produto"));
-    }
+		return produtoMapper.toResponseDto(produtoEntity);
+	}
 
-    public void deletar(Long id) {
-        Produto produto = buscarPorId(id);
-        produtoRepository.delete(produto);
-    }
+	public List<ProdutoResponseDTO> buscarTodos() {
+		return produtoRepository.findAll().stream().map(produtoMapper::toResponseDto).collect(Collectors.toList());
+	}
+
+	public ProdutoResponseDTO buscarPorId(Long id) {
+		Produto produto = produtoRepository.findById(id)
+				.orElseThrow(() -> new NotFoundException("Produto não encontrado com o ID: " + id));
+
+		return produtoMapper.toResponseDto(produto);
+	}
+
+	public ProdutoResponseDTO atualizar(Long id, ProdutoRequestDTO produtoRequestDTO) {
+		Produto produtoExistente = produtoRepository.findById(id)
+				.orElseThrow(() -> new NotFoundException("Produto não encontrado com o ID: " + id));
+
+		if (produtoRequestDTO.getNome() == null || produtoRequestDTO.getNome().trim().isEmpty()) {
+			throw new UsuarioException("O nome do produto não pode ser vazio.");
+		}
+
+		Produto produtoAtualizado = produtoMapper.toEntity(produtoRequestDTO);
+
+		produtoAtualizado.setId(produtoExistente.getId());
+
+		produtoRepository.save(produtoAtualizado);
+
+		return produtoMapper.toResponseDto(produtoAtualizado);
+	}
+
+	public void deletar(Long id) {
+		Produto produto = produtoRepository.findById(id)
+				.orElseThrow(() -> new NotFoundException("Produto não encontrado com o ID: " + id));
+
+		produtoRepository.delete(produto);
+	}
 }
